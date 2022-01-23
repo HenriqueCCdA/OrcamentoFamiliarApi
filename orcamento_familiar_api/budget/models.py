@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 
 class Base(models.Model):
 
@@ -19,6 +18,7 @@ class Base(models.Model):
 
 class Receita(Base):
     pass
+
 
 class Despesa(Base):
     pass
