@@ -30,12 +30,14 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
+AUTH_USER_MODEL = 'core.User'
 
 # Application definition
 
 INSTALLED_APPS = [
     # my apps
     'orcamento_familiar_api.core',
+    'orcamento_familiar_api.budget',
     # django default
     'django.contrib.admin',
     'django.contrib.auth',
