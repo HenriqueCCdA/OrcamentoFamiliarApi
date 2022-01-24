@@ -38,3 +38,9 @@ jobs:
 
     - name: Lint with flake8
       run: flake8 .
+
+    - name: Test with pytest
+      run: pytest orcamento_familiar_api --cov=orcamento_familiar_api
+
+    - name: Posting Coverage
+      run: codecov
