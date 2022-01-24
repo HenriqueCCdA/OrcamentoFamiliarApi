@@ -24,9 +24,3 @@ Instalando a dependecias
 ´´´console
 pip install -r .\requirements-dev.txt
 ´´´
-
-´´´console
-startproject orcamento_familiar_api
-cd orcamento_familiar_api
-django-admin startapp core
-`´´
