@@ -1,10 +1,12 @@
 from json import loads
 from http import HTTPStatus
 from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 
 from orcamento_familiar_api.budget.models import Despesa, Receita
 
@@ -32,7 +34,7 @@ def receitas(request):
         # validantion
         for key in Receita.required_fields():
             if key not in dict_:
-                return JsonResponse(data={'error': f'"{key}" field is missing'},
+                return JsonResponse(data={'error': f"'{key}' field is missing"},
                                     status=HTTPStatus.BAD_REQUEST)
 
         date = datetime.fromisoformat(dict_['data'])
@@ -50,6 +52,23 @@ def receitas(request):
         return JsonResponse(data=dict_, status=HTTPStatus.CREATED)
 
     return JsonResponse(data={})
+
+
+def receita(request, id):
+
+    try:
+        income = Receita.objects.get(id=id)
+    except(ObjectDoesNotExist):
+        return JsonResponse(data={'error': f"id '{id}' does not exist"},
+                            status=HTTPStatus.NOT_FOUND)
+
+    dict_ = {
+            'descricao': income.descricao,
+            'valor': income.valor,
+            'data': income.data
+            }
+
+    return JsonResponse(data=dict_)
 
 
 @csrf_exempt

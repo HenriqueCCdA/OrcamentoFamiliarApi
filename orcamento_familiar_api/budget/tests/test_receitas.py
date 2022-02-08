@@ -80,6 +80,36 @@ def test_income_list_with_five(five_incomes, response_incomes_get):
         assert str(expect.valor) == income['valor']
         assert str(expect.data) == income['data']
 
+# GET /api/v1/receitas/{id}
+
+
+def test_income_by_id(client, five_incomes):
+    '''
+    GET: /api/v1/receitas/{id}
+
+    Testa o retorno de uma receita especifica por id
+    '''
+    get_ids = [receita.id for receita in Receita.objects.all()]
+    for i, id in enumerate(get_ids):
+        response = client.get(f'/api/v1/receitas/{id}')
+        income = json.loads(response.content)
+        assert five_incomes[i].descricao == income['descricao']
+        assert str(five_incomes[i].valor) == income['valor']
+        assert str(five_incomes[i].data) == income['data']
+
+
+def test_income_by_id_not_exist(client, income):
+    '''
+    GET: /api/v1/receitas/{id}
+
+    Testa o retorno de uma receita especifica quando o id não existe
+    '''
+    response = client.get('/api/v1/receitas/2')
+    content = json.loads(response.content)
+    assert response.status_code == HTTPStatus.NOT_FOUND  # 404
+    assert content['error'] == "id '2' does not exist"
+
+
 # POST /api/v1/receitas
 
 
@@ -94,6 +124,11 @@ def income(db):
 
 
 def test_income_create(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa se um receita foi criada
+    '''
 
     income_json = json.dumps(income)
     response = client.post('/api/v1/receitas',
@@ -114,6 +149,12 @@ def test_income_create(client, income):
 
 
 def test_income_with_missing_fields(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa o comportamento quando esta faltando um dos campos. Neste caso a receita não
+    pode ser ser criada.
+    '''
 
     for key in Receita.required_fields():
         income_with_missing_fields = income.copy()
@@ -127,10 +168,16 @@ def test_income_with_missing_fields(client, income):
         error = json.loads(response.content)['error']
 
         assert response.status_code == HTTPStatus.BAD_REQUEST  # 400
-        assert error == f'"{key}" field is missing'
+        assert error == f"'{key}' field is missing"
 
 
 def test_income_create_twice_in_a_row(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa o comportamento quando se tenta criar duas receitas iguais. Neste caso
+    a segunda receita não pode ser ser criada.
+    '''
 
     income_json = json.dumps(income)
     response = client.post('/api/v1/receitas',
@@ -155,6 +202,12 @@ def test_income_create_twice_in_a_row(client, income):
 
 
 def test_income_create_same_description_and_month(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa o comportamento quando se tenta criar duas receitas com descricoes iguais e
+    e com o mesmo mes. Neste caso a segunda receita não pode ser ser criada.
+    '''
 
     income_json = json.dumps(income)
 
@@ -180,6 +233,13 @@ def test_income_create_same_description_and_month(client, income):
 
 
 def test_income_create_same_month_and_description_space_end(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa o comportamento quando se tenta criar duas receitas iguais. Onde a discriação
+    tem um espaço embrando a mais no final. Neste caso a segunda receita não pode ser ser
+    criada.
+    '''
 
     income_json = json.dumps(income)
 
@@ -205,6 +265,12 @@ def test_income_create_same_month_and_description_space_end(client, income):
 
 
 def test_income_create_same_description_day_and_year_but_other_month(client, income):
+    '''
+    POST: /api/v1/receitas/
+
+    Testa o comportamento quando se tenta criar duas receitas com a mesma descricao, dia e ano.
+    Neste caso a segunda receita tem que ser criada.
+    '''
 
     income_json = json.dumps(income)
 
