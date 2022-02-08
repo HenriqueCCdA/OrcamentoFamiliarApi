@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from django.db import transaction
 
 import pytest
 from model_bakery import baker
@@ -78,3 +79,151 @@ def test_income_list_with_five(five_incomes, response_incomes_get):
         assert expect.descricao == income['descricao']
         assert str(expect.valor) == income['valor']
         assert str(expect.data) == income['data']
+
+# POST /api/v1/receitas
+
+
+@pytest.fixture
+def income(db):
+    income = {
+        'descricao': 'Minha receita de Teste',
+        'valor': '100.00',
+        'data': '2022-01-23'
+    }
+    return income
+
+
+def test_income_create(client, income):
+
+    income_json = json.dumps(income)
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    #  test status code 201 and application/json from response
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    #  test if receita was correct save in db
+
+    receita_db = Receita.objects.filter(data=income['data']).first()
+
+    assert income['descricao'] == receita_db.descricao
+    assert income['valor'] == str(receita_db.valor)
+    assert income['data'] == str(receita_db.data)
+
+
+def test_income_with_missing_fields(client, income):
+
+    for key in Receita.required_fields():
+        income_with_missing_fields = income.copy()
+        del income_with_missing_fields[key]
+        income_json = json.dumps(income_with_missing_fields)
+
+        response = client.post('/api/v1/receitas',
+                               data=income_json,
+                               content_type='application/json')
+
+        error = json.loads(response.content)['error']
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST  # 400
+        assert error == f'"{key}" field is missing'
+
+
+def test_income_create_twice_in_a_row(client, income):
+
+    income_json = json.dumps(income)
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    with transaction.atomic():
+        response = client.post('/api/v1/receitas',
+                               data=income_json,
+                               content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CONFLICT  # 409
+    assert response['content-type'] == 'application/json'
+
+    error = json.loads(response.content)['error']
+    assert error == 'Income already registered'
+
+    assert Receita.objects.count() == 1
+
+
+def test_income_create_same_description_and_month(client, income):
+
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    income['data'] = '2022-01-01'
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CONFLICT  # 409
+    assert response['content-type'] == 'application/json'
+
+    error = json.loads(response.content)['error']
+    assert error == 'Income already registered'
+
+
+def test_income_create_same_month_and_description_space_end(client, income):
+
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    income['descricao'] = income['descricao'] + ' '
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CONFLICT  # 409
+    assert response['content-type'] == 'application/json'
+
+    error = json.loads(response.content)['error']
+    assert error == 'Income already registered'
+
+
+def test_income_create_same_description_day_and_year_but_other_month(client, income):
+
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    income['data'] = '2022-02-23'
+    income_json = json.dumps(income)
+
+    response = client.post('/api/v1/receitas',
+                           data=income_json,
+                           content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CREATED  # 201
+    assert response['content-type'] == 'application/json'
+
+    income_list_db = Receita.objects.all()
+    assert len(income_list_db) == 2
