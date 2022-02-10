@@ -23,6 +23,7 @@ class Base(models.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'descricao': self.descricao,
             'valor': self.valor,
             'data': self.data
