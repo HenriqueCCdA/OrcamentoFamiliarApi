@@ -21,13 +21,18 @@ class Base(models.Model):
     def required_fields():
         return ('descricao', 'valor', 'data')
 
-    def to_dict(self):
-        return {
-            'id': self.id,
+    def to_dict(self, id_field=True):
+
+        dict_ = {
             'descricao': self.descricao,
             'valor': self.valor,
             'data': self.data
         }
+
+        if id_field:
+            dict_['id'] = self.id
+
+        return dict_
 
 
 class Receita(Base):

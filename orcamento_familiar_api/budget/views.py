@@ -42,15 +42,21 @@ def receitas(request):
     return JsonResponse(data={})
 
 
+@csrf_exempt
 def receita(request, id):
 
-    try:
-        income = Receita.objects.get(id=id)
-    except(ObjectDoesNotExist):
-        return JsonResponse(data={'error': f"id '{id}' does not exist"},
-                            status=HTTPStatus.NOT_FOUND)
+    if request.method in ('GET', 'DELETE'):
+        try:
+            income = Receita.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse(data={'error': f"id '{id}' does not exist"},
+                                status=HTTPStatus.NOT_FOUND)
 
-    return JsonResponse(data=income.to_dict())
+        if request.method == 'DELETE':
+            income.delete()
+            return JsonResponse(data=income.to_dict(False))
+
+        return JsonResponse(data=income.to_dict())
 
 
 @csrf_exempt
