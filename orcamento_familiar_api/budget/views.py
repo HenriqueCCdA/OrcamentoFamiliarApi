@@ -1,13 +1,12 @@
 from json import loads
 from http import HTTPStatus
-from django.db import IntegrityError
-from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ObjectDoesNotExist
 
-
+from orcamento_familiar_api.budget.facade import save_in_db_with_restricion, validation
 from orcamento_familiar_api.budget.models import Despesa, Receita
 
 
@@ -15,14 +14,8 @@ from orcamento_familiar_api.budget.models import Despesa, Receita
 def receitas(request):
 
     if request.method == 'GET':
-        income_list = Receita.objects.all()
 
-        income_list = [{
-                        'descricao': income.descricao,
-                        'valor': income.valor,
-                        'data': income.data
-                      }
-                      for income in income_list]
+        income_list = [income.to_dict() for income in Receita.objects.all()]
 
         data = {'list': income_list}
 
@@ -31,25 +24,20 @@ def receitas(request):
     elif request.method == 'POST':
         dict_ = loads(request.body)
 
-        # validantion
-        for key in Receita.required_fields():
-            if key not in dict_:
-                return JsonResponse(data={'error': f"'{key}' field is missing"},
-                                    status=HTTPStatus.BAD_REQUEST)
+        error = validation(Receita, dict_)
 
-        date = datetime.fromisoformat(dict_['data'])
-        receita = Receita(descricao=dict_['descricao'].strip(),
-                          valor=dict_['valor'],
-                          data=dict_['data'],
-                          mes=date.month)
+        if not error:
+            date = datetime.fromisoformat(dict_['data'])
+            receita = Receita(descricao=dict_['descricao'].strip(),
+                              valor=dict_['valor'],
+                              data=dict_['data'],
+                              mes=date.month)
 
-        try:
-            receita.save()
-        # restriticion unique_together = ('descricao', 'mes',)
-        except(IntegrityError):
-            return JsonResponse(data={'error': 'Income already registered'},
-                                status=HTTPStatus.CONFLICT)
-        return JsonResponse(data=dict_, status=HTTPStatus.CREATED)
+            resp_json = save_in_db_with_restricion(receita, dict_)
+
+            return resp_json
+        else:
+            return JsonResponse(data={'error': error}, status=HTTPStatus.BAD_REQUEST)
 
     return JsonResponse(data={})
 
@@ -62,25 +50,13 @@ def receita(request, id):
         return JsonResponse(data={'error': f"id '{id}' does not exist"},
                             status=HTTPStatus.NOT_FOUND)
 
-    dict_ = {
-            'descricao': income.descricao,
-            'valor': income.valor,
-            'data': income.data
-            }
-
-    return JsonResponse(data=dict_)
+    return JsonResponse(data=income.to_dict())
 
 
 @csrf_exempt
 def despesas(request):
-    outgoing_list = Despesa.objects.all()
 
-    outgoing_list = [{
-                      'descricao': outgoing.descricao,
-                      'valor': outgoing.valor,
-                      'data': outgoing.data
-                     }
-                     for outgoing in outgoing_list]
+    outgoing_list = [outgoing.to_dict() for outgoing in Despesa.objects.all()]
 
     data = {'list': outgoing_list}
 

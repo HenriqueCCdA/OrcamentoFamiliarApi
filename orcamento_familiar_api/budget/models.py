@@ -21,6 +21,13 @@ class Base(models.Model):
     def required_fields():
         return ('descricao', 'valor', 'data')
 
+    def to_dict(self):
+        return {
+            'descricao': self.descricao,
+            'valor': self.valor,
+            'data': self.data
+        }
+
 
 class Receita(Base):
     pass
