@@ -14,7 +14,7 @@ def save_in_db_with_restricion(obj_orm, data_in_request) -> JsonResponse:
         obj_orm.save()
         resp_json = JsonResponse(data=data_in_request, status=HTTPStatus.CREATED)
     # restriticion unique_together = ('descricao', 'mes',)
-    except(IntegrityError):
+    except IntegrityError:
         resp_json = JsonResponse(data={'error': 'Income already registered'},
                                  status=HTTPStatus.CONFLICT)
 

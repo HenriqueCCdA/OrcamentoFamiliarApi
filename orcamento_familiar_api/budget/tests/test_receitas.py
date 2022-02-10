@@ -293,3 +293,30 @@ def test_income_create_same_description_day_and_year_but_other_month(client, inc
 
     income_list_db = Receita.objects.all()
     assert len(income_list_db) == 2
+
+
+# DELETE /api/v1/receitas/{id}
+
+
+def test_delete_income(client, one_income):
+
+    response = client.delete(f'/api/v1/receitas/{one_income.id}')
+
+    income_response = json.loads(response.content)
+
+    assert 0 == len(Receita.objects.all())
+
+    assert one_income.descricao == income_response['descricao']
+    assert str(one_income.valor) == income_response['valor']
+    assert str(one_income.data) == income_response['data']
+
+
+def test_delete_income_doesnt_exist_id(client, one_income):
+
+    one_income.id += 1
+
+    response = client.delete(f'/api/v1/receitas/{one_income.id}')
+
+    income_response = json.loads(response.content)
+
+    assert f"id '{one_income.id}' does not exist" == income_response['error']
