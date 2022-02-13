@@ -1,24 +1,15 @@
-from django.http import JsonResponse
-from http import HTTPStatus
-from django.db import IntegrityError
+def check_restricion_create(model, obj):
+    return not model.objects.filter(descricao=obj.descricao, data__month=obj.data.month).exists()
 
 
-def save_in_db_with_restricion(obj_orm, data_in_request) -> JsonResponse:
-    '''
-    Salva no banco de dados com as retricoes
+def check_restricion_update(model, obj):
 
-    param: obj_orm objeto que tentara se salvo no banco de dados
-    param: data_in_request dicionario com os dados do request
-    '''
-    try:
-        obj_orm.save()
-        resp_json = JsonResponse(data=data_in_request, status=HTTPStatus.CREATED)
-    # restriticion unique_together = ('descricao', 'mes',)
-    except IntegrityError:
-        resp_json = JsonResponse(data={'error': 'Income already registered'},
-                                 status=HTTPStatus.CONFLICT)
+    exist_obj = model.objects.filter(descricao=obj.descricao, data__month=obj.data.month).first()
 
-    return resp_json
+    if not exist_obj:
+        return True
+
+    return obj.id == exist_obj.id
 
 
 def validation(model, data_in_request) -> str:

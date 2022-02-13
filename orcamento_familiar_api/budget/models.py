@@ -25,8 +25,8 @@ class Base(models.Model):
 
         dict_ = {
             'descricao': self.descricao,
-            'valor': self.valor,
-            'data': self.data
+            'valor': str(self.valor),
+            'data': str(self.data)
         }
 
         if id_field:

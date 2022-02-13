@@ -1,3 +1,4 @@
+from decimal import Decimal
 from json import loads
 from http import HTTPStatus
 from datetime import datetime
@@ -6,7 +7,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 
-from orcamento_familiar_api.budget.facade import save_in_db_with_restricion, validation
+from orcamento_familiar_api.budget.facade import (check_restricion_create,
+                                                  check_restricion_update,
+                                                  validation)
 from orcamento_familiar_api.budget.models import Despesa, Receita
 
 
@@ -29,23 +32,27 @@ def receitas(request):
         if not error:
             date = datetime.fromisoformat(dict_['data'])
             receita = Receita(descricao=dict_['descricao'].strip(),
-                              valor=dict_['valor'],
-                              data=dict_['data'],
+                              valor=Decimal(dict_['valor']),
+                              data=date,
                               mes=date.month)
 
-            resp_json = save_in_db_with_restricion(receita, dict_)
+            if check_restricion_create(Receita, receita):
+                receita.save()
+                return JsonResponse(data=dict_, status=HTTPStatus.CREATED)
+            else:
+                return JsonResponse(data={'error': 'Income already registered'},
+                                    status=HTTPStatus.CONFLICT)
 
-            return resp_json
         else:
             return JsonResponse(data={'error': error}, status=HTTPStatus.BAD_REQUEST)
 
-    return JsonResponse(data={})
+    return JsonResponse(data={}, status=HTTPStatus.BAD_REQUEST)
 
 
 @csrf_exempt
 def receita(request, id):
 
-    if request.method in ('GET', 'DELETE'):
+    if request.method in ('GET', 'DELETE', 'PUT'):
         try:
             income = Receita.objects.get(id=id)
         except ObjectDoesNotExist:
@@ -56,7 +63,27 @@ def receita(request, id):
             income.delete()
             return JsonResponse(data=income.to_dict(False))
 
+        if request.method == 'PUT':
+            dict_ = loads(request.body)
+
+            error = validation(Receita, dict_)
+
+            if not error:
+                date = datetime.fromisoformat(dict_['data'])
+                income.descricao = dict_['descricao'].strip()
+                income.valor = Decimal(dict_['valor'])
+                income.data = date
+
+                if check_restricion_update(Receita, income):
+                    income.save()
+                    return JsonResponse(data=dict_, status=HTTPStatus.OK)
+                else:
+                    return JsonResponse(data={'error': 'Income already registered'},
+                                        status=HTTPStatus.CONFLICT)
+
         return JsonResponse(data=income.to_dict())
+
+    return JsonResponse(data={}, status=HTTPStatus.BAD_REQUEST)
 
 
 @csrf_exempt
