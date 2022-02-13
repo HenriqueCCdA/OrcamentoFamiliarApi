@@ -1,3 +1,4 @@
+from decimal import Decimal
 from http import HTTPStatus
 from django.db import transaction
 
@@ -320,3 +321,38 @@ def test_delete_income_doesnt_exist_id(client, one_income):
     income_response = json.loads(response.content)
 
     assert f"id '{one_income.id}' does not exist" == income_response['error']
+
+# PUT /api/v1/receitas/{id}
+
+
+def test_put_income(client, one_income):
+
+    one_income.valor = Decimal('300.00')
+
+    income_json = json.dumps(one_income.to_dict(id_field=False))
+    response = client.put(f'/api/v1/receitas/{one_income.id}',
+                          data=income_json,
+                          content_type='application/json')
+
+    update_income = Receita.objects.get(id=one_income.id)
+
+    assert response.status_code == HTTPStatus.OK
+
+    assert update_income.valor == one_income.valor
+
+
+# PUT /api/v1/receitas/{id}
+
+def test_put_income_to_violate_restricion(client, five_incomes):
+
+    first_income_update = five_incomes[0]
+    first_income_update.descricao = five_incomes[1].descricao
+    first_income_update.data = five_incomes[1].data
+
+    income_json = json.dumps(first_income_update.to_dict(id_field=False))
+
+    response = client.put(f'/api/v1/receitas/{first_income_update.id}',
+                          data=income_json,
+                          content_type='application/json')
+
+    assert response.status_code == HTTPStatus.CONFLICT
