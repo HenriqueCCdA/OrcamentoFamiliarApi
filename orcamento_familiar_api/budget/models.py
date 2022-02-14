@@ -63,8 +63,12 @@ class Base(models.Model):
 
 
 class Receita(Base):
-    pass
+    @staticmethod
+    def budget_type():
+        return 'income'
 
 
 class Despesa(Base):
-    pass
+    @staticmethod
+    def budget_type():
+        return 'outcome'

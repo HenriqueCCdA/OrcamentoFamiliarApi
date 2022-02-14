@@ -76,7 +76,7 @@ def test_income_create_twice_in_a_row(client, income_dict, url_base):
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'Income already registered'
+    assert error == 'income already registered'
 
     assert Receita.objects.count() == 1
 
@@ -109,7 +109,7 @@ def test_income_create_same_description_and_month(client, income_dict, url_base)
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'Income already registered'
+    assert error == 'income already registered'
 
 
 def test_income_create_same_month_and_description_space_end(client, income_dict, url_base):
@@ -141,7 +141,7 @@ def test_income_create_same_month_and_description_space_end(client, income_dict,
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'Income already registered'
+    assert error == 'income already registered'
 
 
 def test_income_create_same_description_day_and_year_but_other_month(client, income_dict, url_base):
