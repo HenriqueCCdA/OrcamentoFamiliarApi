@@ -17,14 +17,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
-from orcamento_familiar_api.budget.views import receita, receitas, despesas
+from orcamento_familiar_api.budget.views import receita, receitas, despesas, despesa
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/receitas', receitas, name='receitas'),
     path('api/v1/receitas/<int:id>', receita, name='receita'),
-    path('api/v1/despesas', despesas, name='despessas')
+    path('api/v1/despesas', despesas, name='despesas'),
+    path('api/v1/despesas/<int:id>', despesa, name='despesa')
 ]
 
 if settings.DEBUG:
