@@ -7,9 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 
-from orcamento_familiar_api.budget.facade import (check_restricion_create,
-                                                  check_restricion_update,
-                                                  validation)
+from orcamento_familiar_api.budget.facade import validation
 from orcamento_familiar_api.budget.models import Despesa, Receita
 
 
@@ -30,14 +28,10 @@ def receitas(request):
         error = validation(Receita, dict_)
 
         if not error:
-            date = datetime.fromisoformat(dict_['data'])
-            receita = Receita(descricao=dict_['descricao'].strip(),
-                              valor=Decimal(dict_['valor']),
-                              data=date,
-                              mes=date.month)
+            income = Receita.dict_to_model(dict_)
 
-            if check_restricion_create(Receita, receita):
-                receita.save()
+            if income.check_restriction_create():
+                income.save()
                 return JsonResponse(data=dict_, status=HTTPStatus.CREATED)
             else:
                 return JsonResponse(data={'error': 'Income already registered'},
@@ -69,12 +63,11 @@ def receita(request, id):
             error = validation(Receita, dict_)
 
             if not error:
-                date = datetime.fromisoformat(dict_['data'])
                 income.descricao = dict_['descricao'].strip()
                 income.valor = Decimal(dict_['valor'])
-                income.data = date
+                income.data = datetime.fromisoformat(dict_['data'])
 
-                if check_restricion_update(Receita, income):
+                if income.check_restriction_update():
                     income.save()
                     return JsonResponse(data=dict_, status=HTTPStatus.OK)
                 else:

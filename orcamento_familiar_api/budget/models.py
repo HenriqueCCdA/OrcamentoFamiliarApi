@@ -1,3 +1,6 @@
+from datetime import datetime
+from decimal import Decimal
+
 from django.db import models
 
 
@@ -33,6 +36,30 @@ class Base(models.Model):
             dict_['id'] = self.id
 
         return dict_
+
+    @classmethod
+    def dict_to_model(cls, dict_):
+        date = datetime.fromisoformat(dict_['data'])
+        return cls(descricao=dict_['descricao'].strip(),
+                   valor=Decimal(dict_['valor']),
+                   data=date,
+                   mes=date.month)
+
+    def check_restriction_create(self):
+        model = self.__class__
+        return not model.objects.filter(descricao=self.descricao,
+                                        data__month=self.data.month).exists()
+
+    def check_restriction_update(self):
+        model = self.__class__
+
+        exist_obj = model.objects.filter(descricao=self.descricao,
+                                         data__month=self.data.month).first()
+
+        if not exist_obj:
+            return True
+
+        return self.id == exist_obj.id
 
 
 class Receita(Base):
