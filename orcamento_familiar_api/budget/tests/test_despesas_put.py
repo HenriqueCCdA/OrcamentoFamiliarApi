@@ -5,7 +5,7 @@ import json
 from orcamento_familiar_api.budget.models import Despesa
 
 
-def test_put_outcome(client, one_outcome, url_base_outcome):
+def test_put_outgoing(client, one_outgoing, url_base_outgoing):
     '''
     PUT: /api/v1/despesas/{id}
 
@@ -13,36 +13,36 @@ def test_put_outcome(client, one_outcome, url_base_outcome):
     Neste a receita tem que ser atualizada.
     '''
 
-    one_outcome.valor = Decimal('300.00')
+    one_outgoing.valor = Decimal('300.00')
 
-    outcome_json = json.dumps(one_outcome.to_dict(id_field=False))
-    response = client.put(f'{url_base_outcome}/{one_outcome.id}',
-                          data=outcome_json,
+    outgoing_json = json.dumps(one_outgoing.to_dict(id_field=False))
+    response = client.put(f'{url_base_outgoing}/{one_outgoing.id}',
+                          data=outgoing_json,
                           content_type='application/json')
 
-    update_outcome = Despesa.objects.get(id=one_outcome.id)
+    update_outgoing = Despesa.objects.get(id=one_outgoing.id)
 
     assert response.status_code == HTTPStatus.OK
 
-    assert update_outcome.valor == one_outcome.valor
+    assert update_outgoing.valor == one_outgoing.valor
 
 
-def test_put_outcome_does_not_exist(client, outcome_dict, url_base_outcome):
+def test_put_outgoing_does_not_exist(client, outgoing_dict, url_base_outgoing):
     '''
     PUT: /api/v1/despesas/{id}
 
     Testa o comportamento quando se atualizar uma receita que não existe.
     '''
 
-    outcome_json = json.dumps(outcome_dict)
-    response = client.put(f'{url_base_outcome}/{1}',
-                          data=outcome_json,
+    outgoing_json = json.dumps(outgoing_dict)
+    response = client.put(f'{url_base_outgoing}/{1}',
+                          data=outgoing_json,
                           content_type='application/json')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_put_outcome_to_violate_restriction(client, five_outcomes, url_base_outcome):
+def test_put_outgoing_to_violate_restriction(client, five_outgoings, url_base_outgoing):
     '''
     PUT: /api/v1/despesas/{id}
 
@@ -50,14 +50,14 @@ def test_put_outcome_to_violate_restriction(client, five_outcomes, url_base_outc
     de descrição e mes unicos. Neste a receita não pode ser atualizada.
     '''
 
-    first_outcome_update = five_outcomes[0]
-    first_outcome_update.descricao = five_outcomes[1].descricao
-    first_outcome_update.data = five_outcomes[1].data
+    first_outgoing_update = five_outgoings[0]
+    first_outgoing_update.descricao = five_outgoings[1].descricao
+    first_outgoing_update.data = five_outgoings[1].data
 
-    outcome_json = json.dumps(first_outcome_update.to_dict(id_field=False))
+    outgoing_json = json.dumps(first_outgoing_update.to_dict(id_field=False))
 
-    response = client.put(f'{url_base_outcome}/{first_outcome_update.id}',
-                          data=outcome_json,
+    response = client.put(f'{url_base_outgoing}/{first_outgoing_update.id}',
+                          data=outgoing_json,
                           content_type='application/json')
 
     assert response.status_code == HTTPStatus.CONFLICT
