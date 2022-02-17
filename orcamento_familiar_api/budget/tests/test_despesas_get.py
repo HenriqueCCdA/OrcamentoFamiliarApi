@@ -4,13 +4,13 @@ import json
 
 
 @pytest.fixture
-def response(client, url_base_outcome, db):
-    return client.get(url_base_outcome)
+def response(client, url_base_outgoing, db):
+    return client.get(url_base_outgoing)
 
 
 # GET /api/v1/depesas
 
-def test_outcome_list_type_and_status_code(one_outcome, response):
+def test_outgoing_list_type_and_status_code(one_outgoing, response):
     '''
     GET: /api/v1/despesas
 
@@ -20,42 +20,42 @@ def test_outcome_list_type_and_status_code(one_outcome, response):
     assert response['content-type'] == 'application/json'
 
 
-def test_outcome_list_none(response):
+def test_outgoing_list_none(response):
     '''
     GET: /api/v1/despesas
 
     Testa quando da há despesas no banco de dados
     '''
 
-    outcome = json.loads(response.content)['list']
+    outgoing = json.loads(response.content)['list']
 
-    assert [] == outcome
+    assert [] == outgoing
 
 
-def test_outcome_list_with_one(one_outcome, response):
+def test_outgoing_list_with_one(one_outgoing, response):
     '''
     GET: /api/v1/despesas
 
     Testa quando quando uma despesas no banco de dados
     '''
 
-    first_outcome = json.loads(response.content)['list'][0]
+    first_outgoing = json.loads(response.content)['list'][0]
 
-    assert one_outcome.descricao == first_outcome['descricao']
-    assert str(one_outcome.valor) == first_outcome['valor']
-    assert str(one_outcome.data) == first_outcome['data']
+    assert one_outgoing.descricao == first_outgoing['descricao']
+    assert str(one_outgoing.valor) == first_outgoing['valor']
+    assert str(one_outgoing.data) == first_outgoing['data']
 
 
-def test_outcome_list_with_five(five_outcomes, response):
+def test_outgoing_list_with_five(five_outgoings, response):
     '''
     GET: /api/v1/despesas
 
     Testa quando quando mais de uma despesas no banco de dados
     '''
 
-    list_outcome = json.loads(response.content)['list']
+    list_outgoing = json.loads(response.content)['list']
 
-    for expect, outcome in zip(five_outcomes, list_outcome):
-        assert expect.descricao == outcome['descricao']
-        assert str(expect.valor) == outcome['valor']
-        assert str(expect.data) == outcome['data']
+    for expect, outgoing in zip(five_outgoings, list_outgoing):
+        assert expect.descricao == outgoing['descricao']
+        assert str(expect.valor) == outgoing['valor']
+        assert str(expect.data) == outgoing['data']

@@ -71,4 +71,4 @@ class Receita(Base):
 class Despesa(Base):
     @staticmethod
     def budget_type():
-        return 'outcome'
+        return 'outgoing'

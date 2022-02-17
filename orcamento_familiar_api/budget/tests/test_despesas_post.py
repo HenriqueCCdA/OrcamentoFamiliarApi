@@ -4,16 +4,16 @@ import json
 from orcamento_familiar_api.budget.models import Despesa
 
 
-def test_outcome_create(client, outcome_dict, url_base_outcome):
+def test_outgoing_create(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
     Testa se um receita foi criada
     '''
 
-    outcome_json = json.dumps(outcome_dict)
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    outgoing_json = json.dumps(outgoing_dict)
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     #  test status code 201 and application/json from response
@@ -22,14 +22,14 @@ def test_outcome_create(client, outcome_dict, url_base_outcome):
 
     #  test if receita was correct save in db
 
-    receita_db = Despesa.objects.filter(data=outcome_dict['data']).first()
+    receita_db = Despesa.objects.filter(data=outgoing_dict['data']).first()
 
-    assert outcome_dict['descricao'] == receita_db.descricao
-    assert outcome_dict['valor'] == str(receita_db.valor)
-    assert outcome_dict['data'] == str(receita_db.data)
+    assert outgoing_dict['descricao'] == receita_db.descricao
+    assert outgoing_dict['valor'] == str(receita_db.valor)
+    assert outgoing_dict['data'] == str(receita_db.data)
 
 
-def test_outcome_with_missing_fields(client, outcome_dict, url_base_outcome):
+def test_outgoing_with_missing_fields(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
@@ -38,12 +38,12 @@ def test_outcome_with_missing_fields(client, outcome_dict, url_base_outcome):
     '''
 
     for key in Despesa.required_fields():
-        outcome_with_missing_fields = outcome_dict.copy()
-        del outcome_with_missing_fields[key]
-        outcome_json = json.dumps(outcome_with_missing_fields)
+        outgoing_with_missing_fields = outgoing_dict.copy()
+        del outgoing_with_missing_fields[key]
+        outgoing_json = json.dumps(outgoing_with_missing_fields)
 
-        response = client.post(url_base_outcome,
-                               data=outcome_json,
+        response = client.post(url_base_outgoing,
+                               data=outgoing_json,
                                content_type='application/json')
 
         error = json.loads(response.content)['error']
@@ -52,7 +52,7 @@ def test_outcome_with_missing_fields(client, outcome_dict, url_base_outcome):
         assert error == f"'{key}' field is missing"
 
 
-def test_outcome_create_twice_in_a_row(client, outcome_dict, url_base_outcome):
+def test_outgoing_create_twice_in_a_row(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
@@ -60,28 +60,28 @@ def test_outcome_create_twice_in_a_row(client, outcome_dict, url_base_outcome):
     a segunda receita não pode ser ser criada.
     '''
 
-    outcome_json = json.dumps(outcome_dict)
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    outgoing_json = json.dumps(outgoing_dict)
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CREATED  # 201
     assert response['content-type'] == 'application/json'
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CONFLICT  # 409
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'outcome already registered'
+    assert error == 'outgoing already registered'
 
     assert Despesa.objects.count() == 1
 
 
-def test_outcome_create_same_description_and_month(client, outcome_dict, url_base_outcome):
+def test_outgoing_create_same_description_and_month(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
@@ -89,30 +89,30 @@ def test_outcome_create_same_description_and_month(client, outcome_dict, url_bas
     e com o mesmo mes. Neste caso a segunda receita não pode ser ser criada.
     '''
 
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CREATED  # 201
     assert response['content-type'] == 'application/json'
 
-    outcome_dict['data'] = '2022-01-01'
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_dict['data'] = '2022-01-01'
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CONFLICT  # 409
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'outcome already registered'
+    assert error == 'outgoing already registered'
 
 
-def test_outcome_create_same_month_and_description_space_end(client, outcome_dict, url_base_outcome):
+def test_outgoing_create_same_month_and_description_space_end(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
@@ -121,30 +121,30 @@ def test_outcome_create_same_month_and_description_space_end(client, outcome_dic
     criada.
     '''
 
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CREATED  # 201
     assert response['content-type'] == 'application/json'
 
-    outcome_dict['descricao'] = outcome_dict['descricao'] + ' '
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_dict['descricao'] = outgoing_dict['descricao'] + ' '
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CONFLICT  # 409
     assert response['content-type'] == 'application/json'
 
     error = json.loads(response.content)['error']
-    assert error == 'outcome already registered'
+    assert error == 'outgoing already registered'
 
 
-def test_outcome_create_same_description_day_and_year_but_other_month(client, outcome_dict, url_base_outcome):
+def test_outgoing_create_same_description_day_and_year_but_other_month(client, outgoing_dict, url_base_outgoing):
     '''
     POST: /api/v1/despesas/
 
@@ -152,24 +152,24 @@ def test_outcome_create_same_description_day_and_year_but_other_month(client, ou
     Neste caso a segunda receita tem que ser criada.
     '''
 
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CREATED  # 201
     assert response['content-type'] == 'application/json'
 
-    outcome_dict['data'] = '2022-02-23'
-    outcome_json = json.dumps(outcome_dict)
+    outgoing_dict['data'] = '2022-02-23'
+    outgoing_json = json.dumps(outgoing_dict)
 
-    response = client.post(url_base_outcome,
-                           data=outcome_json,
+    response = client.post(url_base_outgoing,
+                           data=outgoing_json,
                            content_type='application/json')
 
     assert response.status_code == HTTPStatus.CREATED  # 201
     assert response['content-type'] == 'application/json'
 
-    outcome_list_db = Despesa.objects.all()
-    assert len(outcome_list_db) == 2
+    outgoing_list_db = Despesa.objects.all()
+    assert len(outgoing_list_db) == 2

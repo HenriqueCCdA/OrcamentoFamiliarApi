@@ -12,7 +12,7 @@ def url_base():
 
 
 @pytest.fixture
-def url_base_outcome():
+def url_base_outgoing():
     return '/api/v1/despesas'
 
 
@@ -37,20 +37,20 @@ def income_dict(db):
 
 
 @pytest.fixture
-def one_outcome(db):
+def one_outgoing(db):
     return baker.make(Despesa)
 
 
 @pytest.fixture
-def five_outcomes(db):
+def five_outgoings(db):
     return baker.make(Despesa, 5)
 
 
 @pytest.fixture
-def outcome_dict(db):
-    outcome_dict = {
+def outgoing_dict(db):
+    outgoing_dict = {
         'descricao': 'Minha despesa de Teste',
         'valor': '100.00',
         'data': '2022-01-23'
     }
-    return outcome_dict
+    return outgoing_dict
